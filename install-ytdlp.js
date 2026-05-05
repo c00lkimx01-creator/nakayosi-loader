@@ -29,50 +29,62 @@ async function download(url, dest) {
 }
 
 (async () => {
-  const binDir = path.join(__dirname, '..', 'bin');
-  if (!fs.existsSync(binDir)) fs.mkdirSync(binDir, { recursive: true });
+  try {
+    const binDir = path.join(__dirname, '..', 'bin');
+    if (!fs.existsSync(binDir)) fs.mkdirSync(binDir, { recursive: true });
 
-  // Check if already installed
-  if (fs.existsSync(YTDLP_PATH)) {
+    // Check if already installed
+    if (fs.existsSync(YTDLP_PATH)) {
+      try {
+        const v = execSync(`${YTDLP_PATH} --version`, { timeout: 10000 }).toString().trim();
+        log(`yt-dlp already installed: ${v}`);
+        return;
+      } catch(e) {
+        log('existing binary broken, re-downloading...');
+        try { fs.unlinkSync(YTDLP_PATH); } catch(_) {}
+      }
+    }
+
+    // Try system yt-dlp first
     try {
-      const v = execSync(`${YTDLP_PATH} --version`, { timeout: 10000 }).toString().trim();
-      log(`yt-dlp already installed: ${v}`);
+      const v = execSync('yt-dlp --version', { timeout: 5000 }).toString().trim();
+      log(`System yt-dlp found: ${v}`);
+      // Create symlink to bin/ (skip if already exists)
+      if (!fs.existsSync(YTDLP_PATH)) {
+        const which = execSync('which yt-dlp').toString().trim();
+        fs.symlinkSync(which, YTDLP_PATH);
+      }
       return;
+    } catch(e) {}
+
+    // Try pip install
+    try {
+      log('Trying pip install yt-dlp...');
+      execSync('pip install yt-dlp --break-system-packages -q', { timeout: 120000, stdio: 'inherit' });
+      const ytdlpBin = execSync('which yt-dlp 2>/dev/null || echo ""').toString().trim();
+      if (ytdlpBin) {
+        if (!fs.existsSync(YTDLP_PATH)) fs.symlinkSync(ytdlpBin, YTDLP_PATH);
+        log('yt-dlp installed via pip');
+        return;
+      }
+    } catch(e) { log('pip install failed: ' + e.message); }
+
+    // Download binary directly
+    log(`Downloading yt-dlp from GitHub...`);
+    try {
+      await download(YTDLP_URL, YTDLP_PATH);
+      fs.chmodSync(YTDLP_PATH, '755');
+      const v = execSync(`${YTDLP_PATH} --version`, { timeout: 15000 }).toString().trim();
+      log(`yt-dlp installed: ${v}`);
     } catch(e) {
-      log('existing binary broken, re-downloading...');
+      log('WARNING: Could not download yt-dlp: ' + e.message);
+      log('Fallback API will be used instead.');
     }
-  }
 
-  // Try system yt-dlp first
-  try {
-    const v = execSync('yt-dlp --version', { timeout: 5000 }).toString().trim();
-    log(`System yt-dlp found: ${v}`);
-    // Create symlink to bin/
-    fs.symlinkSync(execSync('which yt-dlp').toString().trim(), YTDLP_PATH);
-    return;
-  } catch(e) {}
-
-  // Try pip install
-  try {
-    log('Trying pip install yt-dlp...');
-    execSync('pip install yt-dlp --break-system-packages -q', { timeout: 120000, stdio: 'inherit' });
-    const ytdlpBin = execSync('which yt-dlp 2>/dev/null || echo ""').toString().trim();
-    if (ytdlpBin) {
-      if (!fs.existsSync(YTDLP_PATH)) fs.symlinkSync(ytdlpBin, YTDLP_PATH);
-      log('yt-dlp installed via pip');
-      return;
-    }
-  } catch(e) { log('pip install failed: ' + e.message); }
-
-  // Download binary directly
-  log(`Downloading yt-dlp from GitHub...`);
-  try {
-    await download(YTDLP_URL, YTDLP_PATH);
-    fs.chmodSync(YTDLP_PATH, '755');
-    const v = execSync(`${YTDLP_PATH} --version`, { timeout: 15000 }).toString().trim();
-    log(`yt-dlp installed: ${v}`);
   } catch(e) {
-    log('WARNING: Could not install yt-dlp: ' + e.message);
-    log('Fallback API will be used instead.');
+    // Never let this script fail the npm install
+    console.warn('[install-ytdlp] Unexpected error (non-fatal):', e.message);
   }
+
+  process.exit(0);
 })();
