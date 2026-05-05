@@ -1,0 +1,21 @@
+{
+  "name": "nakayoshi-tube2",
+  "version": "2.0.0",
+  "description": "仲良しtube2 ダウンローダー - YouTube downloader with yt-dlp backend",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js",
+    "postinstall": "node server/install-ytdlp.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "express-rate-limit": "^7.3.1",
+    "helmet": "^7.1.0",
+    "node-fetch": "^3.3.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
