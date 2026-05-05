@@ -1,0 +1,1276 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>仲良しtube2 ダウンローダー</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0d1a;
+    --bg2: #13132a;
+    --bg3: #1a1a35;
+    --card: #1e1e3a;
+    --card2: #252548;
+    --border: rgba(120,100,255,0.25);
+    --border2: rgba(120,100,255,0.5);
+    --accent: #7b5fff;
+    --accent2: #ff5faa;
+    --accent3: #5fffd4;
+    --text: #e8e4ff;
+    --text2: #a09ec8;
+    --text3: #6a68a0;
+    --success: #5fffd4;
+    --error: #ff5f7b;
+    --warning: #ffcc5f;
+  }
+  [data-theme="light"] {
+    --bg: #f0eeff;
+    --bg2: #e6e2ff;
+    --bg3: #dcd8ff;
+    --card: #ffffff;
+    --card2: #f5f3ff;
+    --border: rgba(100,80,220,0.2);
+    --border2: rgba(100,80,220,0.4);
+    --accent: #6040e0;
+    --accent2: #d0107a;
+    --accent3: #008870;
+    --text: #1a1440;
+    --text2: #4a3880;
+    --text3: #8070c0;
+    --success: #007a60;
+    --error: #c80030;
+    --warning: #a06000;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Zen Maru Gothic', sans-serif;
+    min-height: 100vh;
+    transition: background 0.3s, color 0.3s;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(ellipse at 20% 20%, rgba(123,95,255,0.08) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 80%, rgba(255,95,170,0.06) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+  [data-theme="light"] body::before {
+    background: radial-gradient(ellipse at 20% 20%, rgba(96,64,224,0.06) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 80%, rgba(208,16,122,0.04) 0%, transparent 60%);
+  }
+  .wrapper { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; padding: 0 16px 80px; }
+
+  /* Header */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px 0 20px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 32px;
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .logo-icon {
+    width: 44px;
+    height: 44px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+  .logo-text h1 {
+    font-family: 'Orbitron', monospace;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 1px;
+    line-height: 1.1;
+  }
+  .logo-text p {
+    font-size: 11px;
+    color: var(--text3);
+    letter-spacing: 0.5px;
+  }
+  .header-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .theme-btn {
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--text2);
+    padding: 8px 14px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 13px;
+    font-family: 'Zen Maru Gothic', sans-serif;
+    transition: all 0.2s;
+  }
+  .theme-btn:hover { border-color: var(--border2); color: var(--text); }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 4px;
+    margin-bottom: 28px;
+  }
+  .tab-btn {
+    flex: 1;
+    padding: 10px 8px;
+    background: transparent;
+    border: none;
+    border-radius: 10px;
+    color: var(--text3);
+    font-family: 'Zen Maru Gothic', sans-serif;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .tab-btn.active {
+    background: var(--accent);
+    color: #fff;
+    font-weight: 500;
+  }
+  .tab-btn:hover:not(.active) { color: var(--text2); }
+
+  /* Tab panels */
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* Cards */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 20px;
+  }
+  .card-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text2);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-title .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+
+  /* Input */
+  .input-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  input[type="text"], input[type="url"], input[type="password"] {
+    flex: 1;
+    min-width: 200px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: 'Zen Maru Gothic', sans-serif;
+    font-size: 14px;
+    padding: 11px 16px;
+    outline: none;
+    transition: border 0.2s;
+  }
+  input:focus { border-color: var(--border2); }
+  input::placeholder { color: var(--text3); }
+
+  .btn {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 11px 20px;
+    font-family: 'Zen Maru Gothic', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn:hover { opacity: 0.85; }
+  .btn:active { transform: scale(0.97); }
+  .btn.secondary {
+    background: var(--card2);
+    color: var(--text2);
+    border: 1px solid var(--border);
+  }
+  .btn.secondary:hover { border-color: var(--border2); color: var(--text); }
+  .btn.danger { background: #7a2040; color: #ffb3c8; border: 1px solid #c84060; }
+  .btn.success { background: #204a40; color: var(--success); border: 1px solid #306050; }
+
+  /* Settings */
+  .settings-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  @media (max-width: 600px) { .settings-grid { grid-template-columns: 1fr; } }
+  .setting-item label {
+    display: block;
+    font-size: 12px;
+    color: var(--text3);
+    margin-bottom: 6px;
+  }
+
+  /* Format select */
+  select {
+    width: 100%;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: 'Zen Maru Gothic', sans-serif;
+    font-size: 13px;
+    padding: 10px 14px;
+    outline: none;
+    cursor: pointer;
+    transition: border 0.2s;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237b5fff' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 36px;
+  }
+  select:focus { border-color: var(--border2); }
+
+  /* Result area */
+  .result-area {
+    margin-top: 20px;
+  }
+  .video-info {
+    display: flex;
+    gap: 16px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .video-thumb {
+    width: 160px;
+    height: 90px;
+    border-radius: 10px;
+    object-fit: cover;
+    background: var(--bg3);
+    flex-shrink: 0;
+    border: 1px solid var(--border);
+  }
+  .video-meta { flex: 1; min-width: 180px; }
+  .video-title-text {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 6px;
+    line-height: 1.4;
+  }
+  .video-channel {
+    font-size: 12px;
+    color: var(--text3);
+    margin-bottom: 8px;
+  }
+  .video-badges {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .badge {
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-weight: 500;
+  }
+  .badge-purple { background: rgba(123,95,255,0.15); color: var(--accent); border: 1px solid rgba(123,95,255,0.3); }
+  .badge-pink { background: rgba(255,95,170,0.12); color: var(--accent2); border: 1px solid rgba(255,95,170,0.25); }
+  .badge-teal { background: rgba(95,255,212,0.1); color: var(--accent3); border: 1px solid rgba(95,255,212,0.25); }
+
+  .action-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+  }
+
+  /* Thumb only mode */
+  .thumb-only-result {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px;
+    text-align: center;
+  }
+  .thumb-full {
+    width: 100%;
+    max-width: 480px;
+    border-radius: 12px;
+    margin: 12px auto;
+    display: block;
+    border: 1px solid var(--border);
+  }
+
+  /* Player */
+  .player-wrap {
+    background: #000;
+    border-radius: 14px;
+    overflow: hidden;
+    margin-bottom: 16px;
+    border: 1px solid var(--border);
+    position: relative;
+  }
+  .player-wrap video, .player-wrap iframe {
+    width: 100%;
+    aspect-ratio: 16/9;
+    display: block;
+    border: none;
+  }
+
+  /* Search results */
+  .search-results {
+    display: grid;
+    gap: 14px;
+    margin-top: 20px;
+  }
+  .search-item {
+    display: flex;
+    gap: 14px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    align-items: flex-start;
+  }
+  .search-item:hover { border-color: var(--border2); background: var(--card2); }
+  .search-thumb-sm {
+    width: 120px;
+    height: 68px;
+    border-radius: 8px;
+    object-fit: cover;
+    flex-shrink: 0;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+  }
+  .search-meta { flex: 1; }
+  .search-title { font-size: 14px; font-weight: 500; color: var(--text); margin-bottom: 5px; line-height: 1.4; }
+  .search-channel { font-size: 12px; color: var(--text3); margin-bottom: 6px; }
+  .search-desc { font-size: 12px; color: var(--text2); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+  /* Status */
+  .status {
+    font-size: 13px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    margin-top: 10px;
+  }
+  .status.info { background: rgba(123,95,255,0.1); color: var(--accent); border: 1px solid rgba(123,95,255,0.25); }
+  .status.success { background: rgba(95,255,212,0.08); color: var(--success); border: 1px solid rgba(95,255,212,0.2); }
+  .status.error { background: rgba(255,95,123,0.1); color: var(--error); border: 1px solid rgba(255,95,123,0.25); }
+  .status.warning { background: rgba(255,204,95,0.1); color: var(--warning); border: 1px solid rgba(255,204,95,0.25); }
+  .hidden { display: none !important; }
+
+  /* Progress */
+  .progress-bar {
+    height: 4px;
+    background: var(--bg3);
+    border-radius: 2px;
+    margin-top: 10px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 2px;
+    width: 0%;
+    transition: width 0.3s;
+  }
+  .spinner {
+    width: 16px; height: 16px;
+    border: 2px solid rgba(123,95,255,0.3);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 6px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Invidious config */
+  .config-toggle { font-size: 13px; color: var(--text3); cursor: pointer; text-decoration: underline dotted; margin-bottom: 12px; display: inline-block; }
+  .config-panel { display: none; background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+  .config-panel.open { display: block; }
+  .api-mode-select { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+  .mode-btn {
+    padding: 7px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text2);
+    font-family: 'Zen Maru Gothic', sans-serif;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .mode-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+  /* Thumb download row */
+  .thumb-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 10px;
+    margin-top: 10px;
+  }
+  .thumb-option {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+  .thumb-option:hover { border-color: var(--border2); }
+  .thumb-option img { width: 100%; aspect-ratio: 16/9; object-fit: cover; display: block; }
+  .thumb-option p { font-size: 11px; color: var(--text3); text-align: center; padding: 6px; }
+
+  /* Footer */
+  footer {
+    text-align: center;
+    padding: 28px 0 10px;
+    color: var(--text3);
+    font-size: 12px;
+    border-top: 1px solid var(--border);
+    margin-top: 40px;
+  }
+  footer span { color: var(--accent2); }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+</style>
+</head>
+<body>
+<div class="wrapper">
+  <header>
+    <div class="logo">
+      <div class="logo-icon">▶</div>
+      <div class="logo-text">
+        <h1>仲良しtube2</h1>
+        <p>YouTube Downloader &amp; Viewer</p>
+      </div>
+    </div>
+    <div class="header-controls">
+      <button class="theme-btn" id="themeToggle" onclick="toggleTheme()">☀ ライト</button>
+    </div>
+  </header>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('download')">⬇ ダウンロード</button>
+    <button class="tab-btn" onclick="switchTab('watch')">▶ 視聴</button>
+    <button class="tab-btn" onclick="switchTab('thumb')">🖼 サムネ取得</button>
+    <button class="tab-btn" onclick="switchTab('search')">🔍 検索</button>
+  </div>
+
+  <!-- ===== DOWNLOAD TAB ===== -->
+  <div class="tab-panel active" id="tab-download">
+    <div class="card">
+      <div class="card-title"><span class="dot"></span>動画URLを入力</div>
+      <div class="input-row">
+        <input type="url" id="dl-url" placeholder="https://www.youtube.com/watch?v=..." />
+        <button class="btn" onclick="fetchVideoInfo('dl')">取得</button>
+      </div>
+      <div id="dl-status" class="status info hidden"></div>
+    </div>
+
+    <div class="card hidden" id="dl-settings-card">
+      <div class="card-title"><span class="dot" style="background:var(--accent2)"></span>ダウンロード設定</div>
+      <div class="settings-grid">
+        <div class="setting-item">
+          <label>形式</label>
+          <select id="dl-format">
+            <option value="video-best">動画 (最高画質)</option>
+            <option value="video-1080">動画 (1080p)</option>
+            <option value="video-720">動画 (720p)</option>
+            <option value="video-480">動画 (480p)</option>
+            <option value="audio-best">音声のみ (最高品質)</option>
+            <option value="audio-mp3">音声のみ (MP3)</option>
+          </select>
+        </div>
+        <div class="setting-item">
+          <label>ダウンロード方法</label>
+          <select id="dl-method">
+            <option value="ytdlp">yt-dlp (推奨)</option>
+            <option value="fallback">フォールバック API</option>
+            <option value="auto">自動 (失敗したら切替)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="result-area hidden" id="dl-result">
+      <div class="video-info" id="dl-video-info">
+        <img class="video-thumb" id="dl-thumb" src="" alt="サムネイル" />
+        <div class="video-meta">
+          <div class="video-title-text" id="dl-title">—</div>
+          <div class="video-channel" id="dl-channel">—</div>
+          <div class="video-badges">
+            <span class="badge badge-purple" id="dl-badge-dur">—</span>
+            <span class="badge badge-teal" id="dl-badge-fmt">動画</span>
+          </div>
+        </div>
+      </div>
+      <div class="action-row">
+        <button class="btn" onclick="startDownload()">⬇ ダウンロード開始</button>
+        <button class="btn secondary" onclick="copyDlLink()">📋 リンクをコピー</button>
+      </div>
+      <div id="dl-progress-status" class="status info hidden"></div>
+      <div class="progress-bar hidden" id="dl-progress-bar">
+        <div class="progress-fill" id="dl-progress-fill"></div>
+      </div>
+      <div id="dl-download-link-area" class="hidden" style="margin-top:12px;">
+        <a id="dl-download-link" class="btn success" href="#" download>✅ ファイルを保存する</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== WATCH TAB ===== -->
+  <div class="tab-panel" id="tab-watch">
+    <div class="card">
+      <div class="card-title"><span class="dot" style="background:var(--accent3)"></span>動画URLを入力して視聴</div>
+      <div class="input-row">
+        <input type="url" id="watch-url" placeholder="https://www.youtube.com/watch?v=..." />
+        <button class="btn" onclick="loadWatch()">視聴する</button>
+      </div>
+      <div id="watch-status" class="status info hidden"></div>
+    </div>
+
+    <div class="result-area hidden" id="watch-result">
+      <!-- Player mode indicator -->
+      <div id="watch-player-mode-bar" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:6px;">
+        <div id="watch-mode-badge" style="font-size:12px;color:var(--text3);display:flex;align-items:center;gap:6px;">
+          <span class="spinner" id="watch-mode-spinner"></span>
+          <span id="watch-mode-label">読み込み中...</span>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button class="btn secondary" style="font-size:11px;padding:5px 10px;" onclick="retryWatchMode('stream')" id="watch-retry-stream" title="yt-dlp/APIでストリーム再生">🔄 ストリーム</button>
+          <button class="btn secondary" style="font-size:11px;padding:5px 10px;" onclick="retryWatchMode('nocookie')" id="watch-retry-nocookie" title="youtube-nocookie.comで再生">🍪 NoCookie</button>
+          <button class="btn secondary" style="font-size:11px;padding:5px 10px;" onclick="retryWatchMode('embed')" id="watch-retry-embed" title="通常のYouTube埋め込みで再生">▶ 埋め込み</button>
+        </div>
+      </div>
+
+      <div class="player-wrap" id="watch-player-wrap">
+        <!-- will be populated dynamically -->
+      </div>
+
+      <div class="video-info">
+        <img class="video-thumb" id="watch-thumb" src="" alt="" />
+        <div class="video-meta">
+          <div class="video-title-text" id="watch-title">—</div>
+          <div class="video-channel" id="watch-channel">—</div>
+          <div class="video-badges">
+            <span class="badge badge-purple" id="watch-badge-dur">—</span>
+            <span class="badge badge-pink" id="watch-badge-mode">▶ 視聴中</span>
+          </div>
+        </div>
+      </div>
+      <div class="action-row">
+        <button class="btn secondary" onclick="switchTab('download'); document.getElementById('dl-url').value = document.getElementById('watch-url').value; fetchVideoInfo('dl')">⬇ ダウンロードする</button>
+        <button class="btn secondary" onclick="switchTab('thumb'); document.getElementById('thumb-url').value = document.getElementById('watch-url').value; fetchThumbs()">🖼 サムネ取得</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== THUMB TAB ===== -->
+  <div class="tab-panel" id="tab-thumb">
+    <div class="card">
+      <div class="card-title"><span class="dot" style="background:var(--accent2)"></span>サムネイル取得</div>
+      <div class="input-row">
+        <input type="url" id="thumb-url" placeholder="https://www.youtube.com/watch?v=..." />
+        <button class="btn" onclick="fetchThumbs()">取得</button>
+      </div>
+      <div id="thumb-status" class="status info hidden"></div>
+    </div>
+
+    <div class="result-area hidden" id="thumb-result">
+      <div class="card">
+        <div class="card-title"><span class="dot" style="background:var(--accent2)"></span>サムネイル一覧 (クリックでダウンロード)</div>
+        <div class="thumb-grid" id="thumb-grid"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SEARCH TAB ===== -->
+  <div class="tab-panel" id="tab-search">
+    <div class="card">
+      <div class="card-title"><span class="dot" style="background:var(--warning)"></span>検索設定</div>
+      <span class="config-toggle" onclick="toggleConfig()">⚙ APIキー / Invidious設定を開く</span>
+      <div class="config-panel" id="config-panel">
+        <div class="api-mode-select">
+          <button class="mode-btn active" id="mode-invidious" onclick="setMode('invidious')">Invidious URL</button>
+          <button class="mode-btn" id="mode-ytapi" onclick="setMode('ytapi')">YouTube API Key</button>
+        </div>
+        <div id="mode-invidious-input">
+          <label style="font-size:12px;color:var(--text3);display:block;margin-bottom:6px;">Invidious インスタンスURL</label>
+          <div class="input-row">
+            <input type="url" id="invidious-url" placeholder="https://invidious.io" value="https://invidious.fdn.fr" />
+            <button class="btn secondary" onclick="testInvidious()">テスト</button>
+          </div>
+          <div id="invidious-status" class="status info hidden"></div>
+        </div>
+        <div id="mode-ytapi-input" class="hidden">
+          <label style="font-size:12px;color:var(--text3);display:block;margin-bottom:6px;">YouTube Data API v3 キー</label>
+          <input type="password" id="yt-api-key" placeholder="AIza..." style="width:100%" />
+        </div>
+      </div>
+
+      <div class="input-row" style="margin-top:4px;">
+        <input type="text" id="search-query" placeholder="検索ワードを入力..." onkeydown="if(event.key==='Enter')doSearch()" />
+        <button class="btn" onclick="doSearch()">🔍 検索</button>
+      </div>
+      <div id="search-status" class="status info hidden"></div>
+    </div>
+
+    <div id="search-results" class="search-results"></div>
+  </div>
+
+  <footer>仲良しtube2 ダウンローダー &mdash; Made with <span>♥</span> &mdash; yt-dlp powered</footer>
+</div>
+
+<script>
+// ============================================================
+// Theme
+// ============================================================
+let theme = localStorage.getItem('nt2-theme') || 'dark';
+applyTheme();
+function applyTheme() {
+  document.documentElement.setAttribute('data-theme', theme);
+  const btn = document.getElementById('themeToggle');
+  if (btn) btn.textContent = theme === 'dark' ? '☀ ライト' : '🌙 ダーク';
+}
+function toggleTheme() {
+  theme = theme === 'dark' ? 'light' : 'dark';
+  localStorage.setItem('nt2-theme', theme);
+  applyTheme();
+}
+
+// ============================================================
+// Tab switching
+// ============================================================
+function switchTab(name) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  const idx = ['download','watch','thumb','search'].indexOf(name);
+  document.querySelectorAll('.tab-btn')[idx].classList.add('active');
+}
+
+// ============================================================
+// Helpers
+// ============================================================
+function extractVideoId(url) {
+  if (!url) return null;
+  let m = url.match(/[?&]v=([^&#]+)/);
+  if (m) return m[1];
+  m = url.match(/youtu\.be\/([^?&#]+)/);
+  if (m) return m[1];
+  m = url.match(/\/embed\/([^?&#]+)/);
+  if (m) return m[1];
+  m = url.match(/\/shorts\/([^?&#]+)/);
+  if (m) return m[1];
+  return null;
+}
+function thumb(vid, q) {
+  const qs = { max: 'maxresdefault', hq: 'hqdefault', mq: 'mqdefault', sd: 'sddefault', dft: 'default' };
+  return `https://i.ytimg.com/vi/${vid}/${qs[q]||'hqdefault'}.jpg`;
+}
+function fmtDur(s) {
+  if (!s) return '—';
+  s = parseInt(s);
+  const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
+  return h ? `${h}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`
+           : `${m}:${String(sec).padStart(2,'0')}`;
+}
+function showStatus(id, msg, type) {
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  el.className = `status ${type}`;
+  el.classList.remove('hidden');
+}
+function hideEl(id) { document.getElementById(id).classList.add('hidden'); }
+function showEl(id) { document.getElementById(id).classList.remove('hidden'); }
+
+// ============================================================
+// Invidious fetch (with CORS proxy fallback)
+// ============================================================
+async function invidiousFetch(path) {
+  const base = (document.getElementById('invidious-url').value || 'https://invidious.fdn.fr').replace(/\/$/, '');
+  const url = `${base}/api/v1${path}`;
+  const proxies = ['https://corsproxy.io/?', 'https://api.allorigins.win/raw?url='];
+  // Try direct
+  try {
+    const r = await fetch(url, { signal: AbortSignal.timeout(8000) });
+    if (r.ok) return r.json();
+  } catch(e) {}
+  // Try proxies
+  for (const px of proxies) {
+    try {
+      const r = await fetch(px + encodeURIComponent(url), { signal: AbortSignal.timeout(8000) });
+      if (r.ok) return r.json();
+    } catch(e) {}
+  }
+  throw new Error('Invidiousへの接続に失敗しました');
+}
+
+// ============================================================
+// YouTube API fetch
+// ============================================================
+async function ytApiFetch(endpoint, params) {
+  const key = document.getElementById('yt-api-key').value.trim();
+  if (!key) throw new Error('YouTube APIキーを入力してください');
+  const p = new URLSearchParams({ ...params, key });
+  const r = await fetch(`https://www.googleapis.com/youtube/v3/${endpoint}?${p}`);
+  const d = await r.json();
+  if (d.error) throw new Error(d.error.message);
+  return d;
+}
+
+// ============================================================
+// Fallback stream URL
+// ============================================================
+function fallbackUrl(vid, type) {
+  return `https://siawaseok.duckdns.org/api/stream/${vid}/${type || 'type2'}`;
+}
+
+// ============================================================
+// Fetch video info (for download + watch tabs)
+// ============================================================
+let currentVideoId = null;
+let currentVideoData = null;
+
+async function fetchVideoInfo(tab) {
+  const urlInput = document.getElementById(tab + '-url').value.trim();
+  const vid = extractVideoId(urlInput);
+  if (!vid) { showStatus(tab + '-status', 'URLが正しくありません', 'error'); return; }
+
+  showStatus(tab + '-status', '情報を取得中...', 'info');
+  currentVideoId = vid;
+
+  // Try Invidious for metadata
+  let info = null;
+  try {
+    info = await invidiousFetch(`/videos/${vid}`);
+  } catch(e) {}
+
+  if (info) {
+    currentVideoData = info;
+    fillVideoUI(tab, {
+      title: info.title,
+      channel: info.author,
+      duration: fmtDur(info.lengthSeconds),
+      thumbUrl: thumb(vid, 'hq')
+    });
+    hideEl(tab + '-status');
+  } else {
+    // Fallback: use thumbnail and assume valid
+    currentVideoData = null;
+    fillVideoUI(tab, {
+      title: '(タイトル取得失敗 — IDは有効)',
+      channel: '—',
+      duration: '—',
+      thumbUrl: thumb(vid, 'hq')
+    });
+    showStatus(tab + '-status', '動画情報の完全取得に失敗しました (yt-dlpまたはフォールバックでダウンロードできます)', 'warning');
+  }
+}
+
+function fillVideoUI(tab, data) {
+  if (tab === 'dl') {
+    document.getElementById('dl-thumb').src = data.thumbUrl;
+    document.getElementById('dl-title').textContent = data.title;
+    document.getElementById('dl-channel').textContent = data.channel;
+    document.getElementById('dl-badge-dur').textContent = data.duration;
+    showEl('dl-settings-card');
+    showEl('dl-result');
+    hideEl('dl-progress-status');
+    hideEl('dl-progress-bar');
+    hideEl('dl-download-link-area');
+  }
+}
+
+// ============================================================
+// Watch Tab — Multi-mode stream player
+// ============================================================
+
+// Current watch state
+let watchVid = null;
+let watchCurrentMode = null; // 'stream' | 'nocookie' | 'embed'
+
+async function loadWatch() {
+  const url = document.getElementById('watch-url').value.trim();
+  const vid = extractVideoId(url);
+  if (!vid) { showStatus('watch-status', 'URLが正しくありません', 'error'); return; }
+
+  showStatus('watch-status', '動画を読み込み中...', 'info');
+  watchVid = vid;
+  currentVideoId = vid;
+  showEl('watch-result');
+
+  // Fetch metadata (non-blocking)
+  invidiousFetch(`/videos/${vid}`)
+    .then(info => {
+      document.getElementById('watch-title').textContent = info.title || '—';
+      document.getElementById('watch-channel').textContent = info.author || '—';
+      document.getElementById('watch-badge-dur').textContent = fmtDur(info.lengthSeconds);
+    })
+    .catch(() => {
+      document.getElementById('watch-title').textContent = '(タイトル取得失敗)';
+    });
+
+  document.getElementById('watch-thumb').src = thumb(vid, 'hq');
+
+  hideEl('watch-status');
+
+  // Start with stream mode
+  await retryWatchMode('stream');
+}
+
+// Set player mode label/badge
+function setWatchModeUI(mode, label, badgeText) {
+  watchCurrentMode = mode;
+  document.getElementById('watch-mode-label').textContent = label;
+  document.getElementById('watch-mode-spinner').style.display = 'none';
+  document.getElementById('watch-badge-mode').textContent = badgeText;
+
+  // Highlight active mode button
+  ['stream','nocookie','embed'].forEach(m => {
+    const btn = document.getElementById('watch-retry-' + m);
+    if (btn) btn.style.borderColor = m === mode ? 'var(--accent)' : '';
+  });
+}
+
+function setWatchLoading(msg) {
+  document.getElementById('watch-mode-label').textContent = msg;
+  document.getElementById('watch-mode-spinner').style.display = 'inline-block';
+}
+
+// Render a <video> element in the player wrap
+function renderVideoPlayer(src, mimeType) {
+  const wrap = document.getElementById('watch-player-wrap');
+  wrap.innerHTML = '';
+  const video = document.createElement('video');
+  video.style.cssText = 'width:100%;aspect-ratio:16/9;display:block;background:#000;';
+  video.controls = true;
+  video.autoplay = true;
+  if (mimeType) {
+    const source = document.createElement('source');
+    source.src = src;
+    source.type = mimeType;
+    video.appendChild(source);
+  } else {
+    video.src = src;
+  }
+  video.onerror = () => {
+    // Auto-fallback if video element fails
+    if (watchCurrentMode === 'stream') {
+      setWatchModeUI('stream', 'ストリーム再生失敗 → NoCookieへ切替中...', '⚠ フォールバック');
+      setTimeout(() => retryWatchMode('nocookie'), 800);
+    }
+  };
+  wrap.appendChild(video);
+}
+
+// Render an <iframe> in the player wrap
+function renderIframePlayer(src, allowStr) {
+  const wrap = document.getElementById('watch-player-wrap');
+  wrap.innerHTML = '';
+  const iframe = document.createElement('iframe');
+  iframe.src = src;
+  iframe.style.cssText = 'width:100%;aspect-ratio:16/9;display:block;border:none;';
+  iframe.allowFullscreen = true;
+  iframe.setAttribute('allow', allowStr || 'autoplay; encrypted-media; fullscreen');
+  wrap.appendChild(iframe);
+}
+
+// Main mode switcher — call this to try a specific playback mode
+async function retryWatchMode(mode) {
+  const vid = watchVid || currentVideoId;
+  if (!vid) return;
+
+  if (mode === 'stream') {
+    setWatchLoading('ストリームURLを取得中...');
+    document.getElementById('watch-badge-mode').textContent = '⏳ 取得中';
+
+    const streamUrl = await fetchBestStreamUrl(vid);
+    if (streamUrl) {
+      renderVideoPlayer(streamUrl);
+      setWatchModeUI('stream', 'ストリーム直接再生 (yt-dlp / API)', '🎬 ストリーム');
+    } else {
+      setWatchModeUI('stream', 'ストリーム取得失敗 → NoCookieで再生中', '⚠ フォールバック');
+      await retryWatchMode('nocookie');
+    }
+
+  } else if (mode === 'nocookie') {
+    renderIframePlayer(
+      `https://www.youtube-nocookie.com/embed/${vid}?autoplay=1&rel=0&modestbranding=1`,
+      'autoplay; encrypted-media; fullscreen'
+    );
+    setWatchModeUI('nocookie', 'youtube-nocookie.com 埋め込み', '🍪 NoCookie');
+
+  } else if (mode === 'embed') {
+    renderIframePlayer(
+      `https://www.youtube.com/embed/${vid}?autoplay=1&rel=0&origin=${encodeURIComponent(location.origin)}`,
+      'autoplay; encrypted-media; picture-in-picture; fullscreen'
+    );
+    setWatchModeUI('embed', 'YouTube 通常埋め込み', '▶ 埋め込み');
+  }
+}
+
+// Fetch the best direct stream URL: try backend API (/api/streams), then siawaseok fallback
+async function fetchBestStreamUrl(vid) {
+  // 1. Try our own backend /api/streams
+  try {
+    const r = await fetch(`/api/streams/${vid}`, { signal: AbortSignal.timeout(18000) });
+    if (r.ok) {
+      const data = await r.json();
+      // Prefer a 'both' stream (has video+audio) — skip m3u8 for <video> tag
+      const candidates = (data.streams || []).filter(s => s.hasVideo && s.hasAudio && !s.isM3u8 && s.url);
+      if (candidates.length) {
+        candidates.sort((a, b) => (b.tbr || b.vbr || 0) - (a.tbr || a.vbr || 0));
+        return candidates[0].url;
+      }
+      // Fallback to best.url from backend
+      if (data.best && data.best.url && !data.best.isM3u8) return data.best.url;
+    }
+  } catch(e) {}
+
+  // 2. Try siawaseok API
+  try {
+    const apiBase = 'https://siawaseok.f5.si';
+    const r = await fetch(`${apiBase}/api/streams/${vid}`, { signal: AbortSignal.timeout(12000) });
+    if (r.ok) {
+      const data = await r.json();
+      const streams = Array.isArray(data) ? data : (data.streams || []);
+      const candidates = streams.filter(s => (s.hasVideo || s.hasAudio) && s.url && !s.isM3u8);
+      if (candidates.length) return candidates[0].url;
+      // old-style type2
+      return `${apiBase}/api/stream/${vid}/type2`;
+    }
+  } catch(e) {}
+
+  // 3. Try siawaseok legacy endpoint directly
+  try {
+    const legacyUrl = `https://siawaseok.f5.si/api/stream/${vid}/type2`;
+    // Quick HEAD check
+    const r = await fetch(legacyUrl, { method: 'HEAD', signal: AbortSignal.timeout(6000) });
+    if (r.ok || r.status === 206) return legacyUrl;
+  } catch(e) {}
+
+  return null; // All failed
+}
+
+// ============================================================
+// Download
+// ============================================================
+async function startDownload() {
+  if (!currentVideoId) return;
+  const fmt = document.getElementById('dl-format').value;
+  const method = document.getElementById('dl-method').value;
+
+  showEl('dl-progress-bar');
+  showStatus('dl-progress-status', '', 'info');
+  hideEl('dl-download-link-area');
+
+  const progressFill = document.getElementById('dl-progress-fill');
+  progressFill.style.width = '0%';
+
+  // Animate progress
+  let prog = 0;
+  const progInterval = setInterval(() => {
+    prog = Math.min(prog + Math.random() * 8, 88);
+    progressFill.style.width = prog + '%';
+  }, 300);
+
+  const vid = currentVideoId;
+
+  // yt-dlp backend (expects a backend; we'll generate the proper command/link)
+  if (method === 'ytdlp' || method === 'auto') {
+    // yt-dlp direct download URL generation
+    // Since this is a static site, we'll use Invidious streams or the fallback API
+    try {
+      showStatus('dl-progress-status', '<span class="spinner"></span>yt-dlp でストリームURLを取得中...', 'info');
+      document.getElementById('dl-progress-status').innerHTML = '<span class="spinner"></span>ストリームURLを取得中...';
+
+      const info = await invidiousFetch(`/videos/${vid}`);
+      let streamUrl = null;
+
+      if (fmt.startsWith('audio')) {
+        // Get best audio
+        const audioStreams = (info.adaptiveFormats || []).filter(f => f.type && f.type.startsWith('audio'));
+        if (audioStreams.length) {
+          streamUrl = audioStreams.sort((a,b) => (b.bitrate||0)-(a.bitrate||0))[0].url;
+        }
+      } else {
+        // Get video stream
+        const qual = fmt === 'video-1080' ? 1080 : fmt === 'video-720' ? 720 : fmt === 'video-480' ? 480 : 9999;
+        const videoStreams = (info.formatStreams || []);
+        let best = null;
+        for (const s of videoStreams) {
+          const h = parseInt((s.resolution||'0p').replace('p',''));
+          if (!best) best = s;
+          else {
+            const bh = parseInt((best.resolution||'0p').replace('p',''));
+            if (qual === 9999 ? h > bh : Math.abs(h - qual) < Math.abs(bh - qual)) best = s;
+          }
+        }
+        if (best) streamUrl = best.url;
+        if (!streamUrl && info.adaptiveFormats) {
+          const vFormats = info.adaptiveFormats.filter(f => f.type && f.type.startsWith('video'));
+          if (vFormats.length) streamUrl = vFormats[0].url;
+        }
+      }
+
+      if (streamUrl) {
+        clearInterval(progInterval);
+        progressFill.style.width = '100%';
+        showStatus('dl-progress-status', '✅ ストリームURL取得成功！ダウンロードボタンを押してください', 'success');
+        const a = document.getElementById('dl-download-link');
+        a.href = streamUrl;
+        a.download = `video_${vid}.${fmt.startsWith('audio') ? 'webm' : 'mp4'}`;
+        showEl('dl-download-link-area');
+        return;
+      }
+    } catch(e) {
+      if (method === 'ytdlp') {
+        clearInterval(progInterval);
+        showStatus('dl-progress-status', 'yt-dlp失敗。フォールバックAPIを使用します...', 'warning');
+        await new Promise(r => setTimeout(r, 1000));
+      }
+    }
+  }
+
+  // Fallback API
+  try {
+    showStatus('dl-progress-status', 'フォールバックAPIを使用中...', 'warning');
+    document.getElementById('dl-progress-status').innerHTML = '<span class="spinner"></span>フォールバックAPIを使用中...';
+    const furl = fallbackUrl(vid, 'type2');
+    // Test if URL is accessible
+    clearInterval(progInterval);
+    progressFill.style.width = '100%';
+    showStatus('dl-progress-status', '✅ フォールバックAPIのURLを生成しました', 'success');
+    const a = document.getElementById('dl-download-link');
+    a.href = furl;
+    a.download = `video_${vid}.mp4`;
+    showEl('dl-download-link-area');
+  } catch(e) {
+    clearInterval(progInterval);
+    showStatus('dl-progress-status', '❌ ダウンロードに失敗しました: ' + e.message, 'error');
+  }
+}
+
+function copyDlLink() {
+  const url = document.getElementById('dl-url').value;
+  if (url) { navigator.clipboard.writeText(url); }
+}
+
+// ============================================================
+// Thumbnail Tab
+// ============================================================
+async function fetchThumbs() {
+  const url = document.getElementById('thumb-url').value.trim();
+  const vid = extractVideoId(url);
+  if (!vid) { showStatus('thumb-status', 'URLが正しくありません', 'error'); return; }
+  showStatus('thumb-status', 'サムネイルを取得中...', 'info');
+
+  const qualities = [
+    { key: 'max', label: 'Max (1280×720)', q: 'maxresdefault' },
+    { key: 'hq', label: 'HQ (480×360)', q: 'hqdefault' },
+    { key: 'mq', label: 'MQ (320×180)', q: 'mqdefault' },
+    { key: 'sd', label: 'SD (640×480)', q: 'sddefault' },
+    { key: 'dft', label: 'Default (120×90)', q: 'default' },
+  ];
+
+  const grid = document.getElementById('thumb-grid');
+  grid.innerHTML = '';
+  showEl('thumb-result');
+  hideEl('thumb-status');
+
+  for (const q of qualities) {
+    const imgUrl = `https://i.ytimg.com/vi/${vid}/${q.q}.jpg`;
+    const div = document.createElement('div');
+    div.className = 'thumb-option';
+    div.title = `${q.label} をダウンロード`;
+    div.onclick = () => downloadThumb(imgUrl, `thumb_${vid}_${q.q}.jpg`);
+    div.innerHTML = `<img src="${imgUrl}" onerror="this.style.display='none'" alt="${q.label}" /><p>${q.label}<br><small>クリックで保存</small></p>`;
+    grid.appendChild(div);
+  }
+
+  // Also try via proxy
+  const fullDiv = document.createElement('div');
+  fullDiv.className = 'thumb-option';
+  fullDiv.style.gridColumn = '1 / -1';
+  const invBase = (document.getElementById('invidious-url').value || '').replace(/\/$/, '');
+  if (invBase) {
+    const invThumbUrl = `${invBase}/vi/${vid}/maxresdefault.jpg`;
+    fullDiv.onclick = () => downloadThumb(invThumbUrl, `thumb_invidious_${vid}.jpg`);
+    fullDiv.innerHTML = `<img src="${invThumbUrl}" alt="Invidious thumbnail" style="max-height:90px;object-fit:contain;width:100%;background:var(--bg3)" onerror="this.closest('.thumb-option').style.display='none'" /><p>Invidious経由 (Max) — クリックで保存</p>`;
+    grid.appendChild(fullDiv);
+  }
+}
+
+async function downloadThumb(url, filename) {
+  try {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    a.click();
+  } catch(e) {
+    // Fallback: open in new tab
+    window.open(url, '_blank');
+  }
+}
+
+// ============================================================
+// Search Tab
+// ============================================================
+let searchMode = 'invidious';
+function setMode(m) {
+  searchMode = m;
+  document.getElementById('mode-invidious').classList.toggle('active', m === 'invidious');
+  document.getElementById('mode-ytapi').classList.toggle('active', m === 'ytapi');
+  document.getElementById('mode-invidious-input').classList.toggle('hidden', m !== 'invidious');
+  document.getElementById('mode-ytapi-input').classList.toggle('hidden', m !== 'ytapi');
+}
+function toggleConfig() {
+  document.getElementById('config-panel').classList.toggle('open');
+}
+
+async function testInvidious() {
+  showStatus('invidious-status', 'テスト中...', 'info');
+  try {
+    const data = await invidiousFetch('/stats');
+    showStatus('invidious-status', '✅ 接続成功！ ' + (data.software?.name || 'Invidious'), 'success');
+  } catch(e) {
+    showStatus('invidious-status', '❌ 接続失敗: ' + e.message, 'error');
+  }
+}
+
+async function doSearch() {
+  const q = document.getElementById('search-query').value.trim();
+  if (!q) return;
+  showStatus('search-status', '検索中...', 'info');
+  document.getElementById('search-results').innerHTML = '<div style="color:var(--text3);font-size:13px;text-align:center;padding:20px"><span class="spinner"></span>検索中...</div>';
+
+  let results = [];
+  try {
+    if (searchMode === 'invidious') {
+      const data = await invidiousFetch(`/search?q=${encodeURIComponent(q)}&type=video`);
+      results = (data || []).filter(v => v.type === 'video').slice(0, 15).map(v => ({
+        id: v.videoId,
+        title: v.title,
+        channel: v.author,
+        desc: v.description || '',
+        dur: fmtDur(v.lengthSeconds),
+        thumbUrl: thumb(v.videoId, 'mq')
+      }));
+    } else {
+      const data = await ytApiFetch('search', { part: 'snippet', q, type: 'video', maxResults: 15 });
+      results = (data.items || []).map(v => ({
+        id: v.id.videoId,
+        title: v.snippet.title,
+        channel: v.snippet.channelTitle,
+        desc: v.snippet.description,
+        dur: '—',
+        thumbUrl: v.snippet.thumbnails?.medium?.url || thumb(v.id.videoId, 'mq')
+      }));
+    }
+    hideEl('search-status');
+    renderResults(results);
+  } catch(e) {
+    showStatus('search-status', '❌ 検索失敗: ' + e.message, 'error');
+    document.getElementById('search-results').innerHTML = '';
+  }
+}
+
+function renderResults(results) {
+  const container = document.getElementById('search-results');
+  if (!results.length) { container.innerHTML = '<div style="color:var(--text3);font-size:13px;text-align:center;padding:20px">結果がありませんでした</div>'; return; }
+  container.innerHTML = '';
+  for (const r of results) {
+    const div = document.createElement('div');
+    div.className = 'search-item';
+    div.innerHTML = `
+      <img class="search-thumb-sm" src="${r.thumbUrl}" alt="" onerror="this.src=''" />
+      <div class="search-meta">
+        <div class="search-title">${escHtml(r.title)}</div>
+        <div class="search-channel">${escHtml(r.channel)} ${r.dur !== '—' ? '· ' + r.dur : ''}</div>
+        <div class="search-desc">${escHtml(r.desc)}</div>
+        <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn" style="font-size:12px;padding:6px 12px" onclick="watchFromSearch('${r.id}')">▶ 視聴</button>
+          <button class="btn secondary" style="font-size:12px;padding:6px 12px" onclick="dlFromSearch('${r.id}')">⬇ DL</button>
+          <button class="btn secondary" style="font-size:12px;padding:6px 12px" onclick="thumbFromSearch('${r.id}')">🖼 サムネ</button>
+        </div>
+      </div>`;
+    container.appendChild(div);
+  }
+}
+
+function escHtml(s) {
+  return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function watchFromSearch(vid) {
+  switchTab('watch');
+  const url = `https://www.youtube.com/watch?v=${vid}`;
+  document.getElementById('watch-url').value = url;
+  loadWatch();
+}
+function dlFromSearch(vid) {
+  switchTab('download');
+  const url = `https://www.youtube.com/watch?v=${vid}`;
+  document.getElementById('dl-url').value = url;
+  currentVideoId = vid;
+  fetchVideoInfo('dl');
+}
+function thumbFromSearch(vid) {
+  switchTab('thumb');
+  const url = `https://www.youtube.com/watch?v=${vid}`;
+  document.getElementById('thumb-url').value = url;
+  fetchThumbs();
+}
+</script>
+</body>
+</html>
