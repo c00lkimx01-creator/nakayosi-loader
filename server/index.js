@@ -74,7 +74,9 @@ function runYtdlp(args, timeout = 30000) {
   return new Promise((resolve, reject) => {
     if (!YTDLP_BIN) return reject(new Error('yt-dlp not available'));
     let stdout = '', stderr = '';
-    const proc = spawn(YTDLP_BIN, args);
+    // Add proxy argument
+    const finalArgs = ['--proxy', 'http://ytproxy-siawaseok.duckdns.org:3007', ...args];
+    const proc = spawn(YTDLP_BIN, finalArgs);
     const timer = setTimeout(() => { proc.kill(); reject(new Error('yt-dlp timeout')); }, timeout);
     proc.stdout.on('data', d => stdout += d.toString());
     proc.stderr.on('data', d => stderr += d.toString());
